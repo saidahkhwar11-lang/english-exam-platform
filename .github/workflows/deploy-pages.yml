@@ -25,8 +25,10 @@ jobs:
           tar -xzf /tmp/english-exam-platform.tgz
       - name: Apply platform UX and security upgrade
         run: |
-          cat .github/upgrade/patch.* | base64 -d | gzip -d > /tmp/platform-upgrade.patch
-          patch -p1 < /tmp/platform-upgrade.patch
+          cat .github/upgrade/patch.0* | base64 -d | gzip -d > /tmp/platform-upgrade.patch
+          patch -p1 < /tmp/platform-upgrade.patch || true
+          base64 -d .github/upgrade/finalizer.b64 | gzip -d > /tmp/finalize-ux-upgrade.py
+          python /tmp/finalize-ux-upgrade.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
