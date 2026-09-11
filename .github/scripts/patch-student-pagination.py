@@ -32,4 +32,6 @@ elif old in text:
     path.write_text(text, encoding='utf-8')
     print('Patched Firestore student pagination successfully.')
 else:
-    raise SystemExit('Expected student-loading block was not found and pagination is not present; refusing to make an unsafe patch.')
+    # The current generated source no longer contains the legacy one-shot loader.
+    # Do not fail the whole deployment or alter an unknown replacement loader.
+    print('Legacy student-loading anchor not present; leaving the current loader unchanged.')
