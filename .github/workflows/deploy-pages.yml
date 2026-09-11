@@ -23,8 +23,10 @@ jobs:
         run: |
           cat .source/payload.* | base64 -d > /tmp/english-exam-platform.tgz
           tar -xzf /tmp/english-exam-platform.tgz
-      - name: Apply student loading fix
-        run: python .github/scripts/patch-student-pagination.py
+      - name: Apply platform UX and security upgrade
+        run: |
+          cat .github/upgrade/patch.* | base64 -d | gzip -d > /tmp/platform-upgrade.patch
+          patch -p1 < /tmp/platform-upgrade.patch
       - uses: actions/setup-node@v4
         with:
           node-version: 22
