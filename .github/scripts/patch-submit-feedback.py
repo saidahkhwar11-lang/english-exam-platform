@@ -11,10 +11,15 @@ if state_anchor not in s:
 if 'const [answerFeedback, setAnswerFeedback]' not in s:
     s = s.replace(state_anchor, state_anchor + '\n  const [answerFeedback, setAnswerFeedback] = useState<Record<string, boolean>>({});', 1)
 
-loop_anchor = '''      let calculated = 0;\n      for (const q of current) {'''
-if loop_anchor not in s:
+loop_anchors = [
+    '      let calculated = 0;\n      for (const [index, q] of current.entries()) {',
+    '      let calculated = 0;\n      for (const q of current) {',
+]
+loop_anchor = next((a for a in loop_anchors if a in s), None)
+if not loop_anchor:
     raise SystemExit('submit loop anchor not found')
-s = s.replace(loop_anchor, '''      let calculated = 0;\n      const feedback: Record<string, boolean> = {};\n      for (const q of current) {''', 1)
+loop_replacement = loop_anchor.replace('      let calculated = 0;', '      let calculated = 0;\n      const feedback: Record<string, boolean> = {};', 1)
+s = s.replace(loop_anchor, loop_replacement, 1)
 
 correct_anchor = '''        if (correct) calculated += Number(q.marks) || 0;\n      }\n      setFinalScore(calculated);'''
 if correct_anchor not in s:
@@ -27,7 +32,8 @@ s = s.replace('const correct=false; return <div key={q.id}', 'const correct=Bool
 s = s.replace('className={submitted ? "submitted-answer" : ""} placeholder="Write the word"', 'className={submitted ? (correct ? "correct" : "wrong") : ""} placeholder="Write the word"', 1)
 s = s.replace('className={submitted ? "submitted-answer" : ""} placeholder="Vocabulary word"', 'className={submitted ? (correct ? "correct" : "wrong") : ""} placeholder="Vocabulary word"', 1)
 
-# Show the correct spelling answer only for wrong responses.
+# Show the correct spelling answer only for responses that are actually wrong
+# under the cached submit-time rule (Part 1 strict; Part 2 typo-tolerant).
 s = s.replace('</label>})}</div>', '{submitted && !correct && <small className="short-answer-feedback">Correct answer: <b>{expected}</b></small>}</label>})}</div>', 1)
 s = s.replace('</div>})}</div>\n            </section>', '{submitted && !correct && <small className="short-answer-feedback">Correct answer: <b>{expected}</b></small>}</div>})}</div>\n            </section>', 1)
 
