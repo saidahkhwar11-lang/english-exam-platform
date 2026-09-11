@@ -27,7 +27,7 @@ jobs:
         run: |
           cat .github/upgrade/patch.0* | base64 -d | gzip -d > /tmp/platform-upgrade.patch
           patch -p1 < /tmp/platform-upgrade.patch || true
-          base64 -d .github/upgrade/finalizer.b64 | gzip -d > /tmp/finalize-ux-upgrade.py
+          cat .github/upgrade/finalizer.0* | base64 -d | gzip -d > /tmp/finalize-ux-upgrade.py
           python /tmp/finalize-ux-upgrade.py
       - uses: actions/setup-node@v4
         with:
