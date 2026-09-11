@@ -11,15 +11,11 @@ if state_anchor not in s:
 if 'const [answerFeedback, setAnswerFeedback]' not in s:
     s = s.replace(state_anchor, state_anchor + '\n  const [answerFeedback, setAnswerFeedback] = useState<Record<string, boolean>>({});', 1)
 
-loop_anchors = [
-    '      let calculated = 0;\n      for (const [index, q] of current.entries()) {',
-    '      let calculated = 0;\n      for (const q of current) {',
-]
-loop_anchor = next((a for a in loop_anchors if a in s), None)
-if not loop_anchor:
-    raise SystemExit('submit loop anchor not found')
-loop_replacement = loop_anchor.replace('      let calculated = 0;', '      let calculated = 0;\n      const feedback: Record<string, boolean> = {};', 1)
-s = s.replace(loop_anchor, loop_replacement, 1)
+calc_anchor = '      let calculated = 0;'
+if calc_anchor not in s:
+    raise SystemExit('submit calculation anchor not found')
+if 'const feedback: Record<string, boolean> = {};' not in s:
+    s = s.replace(calc_anchor, calc_anchor + '\n      const feedback: Record<string, boolean> = {};', 1)
 
 correct_anchor = '''        if (correct) calculated += Number(q.marks) || 0;\n      }\n      setFinalScore(calculated);'''
 if correct_anchor not in s:
