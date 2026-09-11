@@ -35,6 +35,8 @@ jobs:
         run: |
           base64 -d .github/upgrade/exam-processor.b64 > /tmp/patch-exam-processor.py
           python /tmp/patch-exam-processor.py
+      - name: Apply strict short written answer autocorrection
+        run: python .github/scripts/patch-strict-short-answers.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
