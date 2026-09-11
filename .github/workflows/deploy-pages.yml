@@ -53,6 +53,9 @@ jobs:
         run: python .github/scripts/patch-score-on-submit-only.py
       - name: Apply student exam runtime guard
         run: python .github/scripts/patch-student-runtime-guard.py
+      - name: Inspect submit runtime path
+        run: |
+          grep -n -E "submitted|setSubmitted|score|submit|saveResult|result" app/page.tsx | head -n 220
       - name: Apply PDF.js TypeScript compatibility fix
         run: python .github/scripts/patch-pdfjs-types.py
       - uses: actions/setup-node@v4
