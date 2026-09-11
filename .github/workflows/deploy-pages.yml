@@ -41,6 +41,8 @@ jobs:
         run: python .github/scripts/patch-tracker-assessment-routing.py
       - name: Apply teacher logout and session type fix
         run: python .github/scripts/patch-teacher-logout-and-session-type.py
+      - name: Hide Student Test tab in teacher workspace
+        run: python .github/scripts/patch-teacher-only-tabs.py
       - name: Apply PDF.js TypeScript compatibility fix
         run: python .github/scripts/patch-pdfjs-types.py
       - uses: actions/setup-node@v4
