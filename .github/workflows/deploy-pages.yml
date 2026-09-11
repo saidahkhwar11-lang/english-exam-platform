@@ -37,6 +37,8 @@ jobs:
           python /tmp/patch-exam-processor.py
       - name: Apply strict short written answer autocorrection
         run: python .github/scripts/patch-strict-short-answers.py
+      - name: Apply automatic tracker assessment routing
+        run: python .github/scripts/patch-tracker-assessment-routing.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
