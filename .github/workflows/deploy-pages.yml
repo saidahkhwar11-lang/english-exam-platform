@@ -45,6 +45,8 @@ jobs:
         run: python .github/scripts/patch-teacher-logout-and-session-type.py
       - name: Apply spelling test student layout
         run: python .github/scripts/patch-spelling-test-layout.py
+      - name: Apply Basic and Advanced level differentiation
+        run: python .github/scripts/patch-level-differentiation.py
       - name: Apply universal answer-key parser and marking safeguards
         run: python .github/scripts/patch-universal-answer-key.py
       - name: Apply runtime-safe written-answer normalization
