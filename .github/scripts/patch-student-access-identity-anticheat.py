@@ -9,6 +9,10 @@ repls = [
 '  const [studentId, setStudentId] = useState("");\n  const [studentName, setStudentName] = useState("");\n'
 ),
 (
+'  const [examName, setExamName] = useState("T1 Reading Test 1");\n',
+'  const [examName, setExamName] = useState("T1 Reading Test 1");\n  const [uploadedTestFileName, setUploadedTestFileName] = useState("");\n'
+),
+(
 '    const allowedStudentIds = Object.fromEntries(teacherStudents.filter((student) => student.classId === classroom.id).map((student) => [student.studentId.trim().replace(/[^A-Za-z0-9_-]/g, "_"), true]));\n    const session = { code, active, classId: classroom.id, gradeLevel: classroom.gradeLevel, section: classroom.section, examName: destination.title, assessmentId: destination.id, assessmentTitle: destination.title, maxMark: destination.max, allowedStudentIds, updatedAt: Date.now() };',
 '    const classStudents = teacherStudents.filter((student) => student.classId === classroom.id);\n    const allowedStudentIds = Object.fromEntries(classStudents.map((student) => [student.studentId.trim().replace(/[^A-Za-z0-9_-]/g, "_"), true]));\n    const allowedStudentNames = Object.fromEntries(classStudents.map((student) => [student.studentId.trim().replace(/[^A-Za-z0-9_-]/g, "_"), student.name || ""]));\n    const session = { code, active, classId: classroom.id, gradeLevel: classroom.gradeLevel, section: classroom.section, examName: destination.title, assessmentId: destination.id, assessmentTitle: destination.title, maxMark: destination.max, allowedStudentIds, allowedStudentNames, updatedAt: Date.now() };'
 ),
@@ -36,6 +40,14 @@ repls = [
 '          <div className="level-change-row"><span>All students start on <b>Standard Level</b>. A teacher must approve any change.</span>',
 '          {access === "student" && <div className="student-identity-row"><span><UserRound size={17}/> Student: <b>{studentName || "—"}</b></span><span>Student ID: <b>{studentId}</b></span></div>}\n          <div className="level-change-row"><span>All students start on <b>Standard Level</b>. A teacher must approve any change.</span>'
 ),
+(
+'<div className="grid gap-5 p-6 md:grid-cols-2"><label className="field md:col-span-2"><span>Teacher test with answer key</span><div className="upload-box"><div className="file-icon"><FileText size={22} /></div><div className="min-w-0 flex-1"><strong className="block truncate">G9 Reading Test with answers.docx</strong><small>Word document · answer key detected</small></div><button type="button" className="secondary-button"><Upload size={16} /> Replace</button></div></label>',
+'<div className="grid gap-5 p-6 md:grid-cols-2"><label className="field md:col-span-2"><span>Teacher test with answer key</span><input id="teacher-test-file-picker" type="file" accept=".doc,.docx,.pdf,.txt" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) setUploadedTestFileName(file.name); }} /><div className="upload-box"><div className="file-icon"><FileText size={22} /></div><div className="min-w-0 flex-1"><strong className="block truncate">{uploadedTestFileName || "No test file selected"}</strong><small>{uploadedTestFileName ? "File selected · ready for processing" : "Choose a Word, PDF, or text test file"}</small></div><button type="button" className="secondary-button" onClick={() => document.getElementById("teacher-test-file-picker")?.click()}><Upload size={16} /> {uploadedTestFileName ? "Replace" : "Add Test File"}</button></div></label>'
+),
+(
+'<button type="button" className="secondary-button" onClick={startNewExam}><Plus size={17}/> New Exam</button>',
+'<button type="button" className="secondary-button" onClick={() => { startNewExam(); setUploadedTestFileName(""); const picker = document.getElementById("teacher-test-file-picker") as HTMLInputElement | null; if (picker) picker.value = ""; }}><Plus size={17}/> New Exam</button>'
+),
 ]
 
 for old, new in repls:
@@ -52,4 +64,4 @@ c = css_path.read_text()
 if '.student-identity-row' not in c:
     c += '''\n.student-identity-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:flex-start;border:1px solid #cfe3f7;background:#f8fbff;border-radius:14px;padding:12px 16px;color:#17324d}.student-identity-row span{display:flex;align-items:center;gap:7px}.student-identity-row b{color:#0d2340}\n'''
 css_path.write_text(c)
-print('student access, identity, and first-violation lock patch applied')
+print('student access, identity, first-violation lock, and teacher file picker patch applied')
