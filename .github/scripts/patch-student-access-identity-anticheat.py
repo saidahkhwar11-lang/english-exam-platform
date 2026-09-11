@@ -43,15 +43,13 @@ for old, new in repls:
         raise SystemExit(f'missing expected source: {old[:90]}')
     s = s.replace(old, new, 1)
 
-# Remove obsolete second-violation wording if it still exists.
 s = s.replace('Violation {violations} of 2: {warning}', 'Violation {violations}: {warning}')
 s = s.replace('You have {2 - violations} {2 - violations === 1 ? "chance" : "chances"} remaining. The test will lock on the second violation.', 'The test locks immediately after a violation and requires teacher approval to continue.')
-
 p.write_text(s)
 
-css = Path('app/globals.css')
-c = css.read_text()
+css_path = Path('app/globals.css')
+c = css_path.read_text()
 if '.student-identity-row' not in c:
     c += '''\n.student-identity-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:flex-start;border:1px solid #cfe3f7;background:#f8fbff;border-radius:14px;padding:12px 16px;color:#17324d}.student-identity-row span{display:flex;align-items:center;gap:7px}.student-identity-row b{color:#0d2340}\n'''
-c.write_text(c)
+css_path.write_text(c)
 print('student access, identity, and first-violation lock patch applied')
