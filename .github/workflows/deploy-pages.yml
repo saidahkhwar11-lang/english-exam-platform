@@ -29,6 +29,8 @@ jobs:
           patch -p1 < /tmp/platform-upgrade.patch || true
           cat .github/upgrade/finalizer.0* | base64 -d | gzip -d > /tmp/finalize-ux-upgrade.py
           python /tmp/finalize-ux-upgrade.py
+      - name: Apply student access and anti-cheating fixes
+        run: python .github/scripts/patch-student-access-identity-anticheat.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
