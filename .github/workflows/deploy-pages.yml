@@ -31,6 +31,8 @@ jobs:
           python /tmp/finalize-ux-upgrade.py
       - name: Apply student access and anti-cheating fixes
         run: python .github/scripts/patch-student-access-identity-anticheat.py
+      - name: Apply paginated tracker student loading
+        run: python .github/scripts/patch-student-pagination.py
       - name: Apply real exam processor and full-content library
         run: |
           base64 -d .github/upgrade/exam-processor.b64 > /tmp/patch-exam-processor.py
