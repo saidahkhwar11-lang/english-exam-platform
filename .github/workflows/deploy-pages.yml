@@ -55,6 +55,8 @@ jobs:
         run: python .github/scripts/patch-student-runtime-guard.py
       - name: Apply crash-safe submit flow
         run: python .github/scripts/patch-safe-submit-final.py
+      - name: Apply post-submit feedback
+        run: python .github/scripts/patch-submit-feedback.py
       - name: Apply PDF.js TypeScript compatibility fix
         run: python .github/scripts/patch-pdfjs-types.py
       - uses: actions/setup-node@v4
