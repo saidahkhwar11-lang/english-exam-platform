@@ -47,6 +47,8 @@ jobs:
         run: python .github/scripts/patch-spelling-test-layout.py
       - name: Apply universal answer-key parser and marking safeguards
         run: python .github/scripts/patch-universal-answer-key.py
+      - name: Apply student exam runtime guard
+        run: python .github/scripts/patch-student-runtime-guard.py
       - name: Apply PDF.js TypeScript compatibility fix
         run: python .github/scripts/patch-pdfjs-types.py
       - uses: actions/setup-node@v4
