@@ -14,14 +14,36 @@ score_rx = re.compile(r'  const score = useMemo\(\(\) => \{ if \(!submitted\) re
 score_repl = '''  const score = finalScore ?? 0;
   const submitExamSafely = () => {
     try {
+      const editDistance = (a: string, b: string) => {
+        const rows = b.length + 1;
+        const cols = a.length + 1;
+        const dp = Array.from({ length: rows }, (_, r) => Array(cols).fill(0));
+        for (let r = 0; r < rows; r++) dp[r][0] = r;
+        for (let c = 0; c < cols; c++) dp[0][c] = c;
+        for (let r = 1; r < rows; r++) {
+          for (let c = 1; c < cols; c++) {
+            const cost = b[r - 1] === a[c - 1] ? 0 : 1;
+            dp[r][c] = Math.min(dp[r - 1][c] + 1, dp[r][c - 1] + 1, dp[r - 1][c - 1] + cost);
+          }
+        }
+        return dp[b.length][a.length];
+      };
       let calculated = 0;
-      for (const q of current) {
+      const part1Count = isSpellingTest ? spellingPart1.length : 0;
+      for (const [index, q] of current.entries()) {
         const value = answers[q.id];
         let correct = false;
         if (q.responseType === "short") {
           const actual = String(value ?? "").normalize("NFKC").replace(/[\\u00A0\\u2007\\u202F]/g, " ").replace(/[’‘]/g, "'").replace(/[“”]/g, '\"').replace(/\\s+/g, " ").trim().toLowerCase();
           const expected = String(q.expectedText ?? "").split(/\\s*\\|\\s*|\\s*;\\s*|\\s+\\/\\s+/).map((item) => item.normalize("NFKC").replace(/[\\u00A0\\u2007\\u202F]/g, " ").replace(/[’‘]/g, "'").replace(/[“”]/g, '\"').replace(/\\s+/g, " ").trim().toLowerCase()).filter(Boolean);
           correct = Boolean(actual) && expected.includes(actual);
+          if (!correct && isSpellingTest && index >= part1Count && actual) {
+            correct = expected.some((target) => {
+              if (!target || actual.includes(" ") || target.includes(" ")) return false;
+              const allowedEdits = target.length >= 6 ? 2 : 1;
+              return Math.abs(actual.length - target.length) <= allowedEdits && editDistance(actual, target) <= allowedEdits;
+            });
+          }
         } else {
           correct = value === q.answer;
         }
@@ -85,4 +107,4 @@ else:
     raise SystemExit('submission effect anchor not found')
 
 p.write_text(s, encoding='utf-8')
-print('crash-safe submit flow applied')
+print('crash-safe submit flow applied with strict Part 1 and typo-tolerant spelling Part 2')
