@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 
 path = Path('app/page.tsx')
 text = path.read_text(encoding='utf-8')
@@ -26,9 +25,11 @@ new = '''      const allStudentDocs: Array<{ name: string; fields?: Record<strin
       const ownStudents = allStudentDocs.map((doc) => ({ id: doc.name.split("/").pop() || "", classId: doc.fields?.classId?.stringValue || "", studentId: doc.fields?.studentId?.stringValue || "", name: doc.fields?.name?.stringValue || "" })).filter((student) => classIds.has(student.classId));
 '''
 
-if old not in text:
-    raise SystemExit('Expected student-loading block was not found; refusing to make an unsafe patch.')
-
-text = text.replace(old, new, 1)
-path.write_text(text, encoding='utf-8')
-print('Patched Firestore student pagination successfully.')
+if new in text or ('const allStudentDocs:' in text and 'studentPageToken' in text):
+    print('Firestore student pagination already present; no change needed.')
+elif old in text:
+    text = text.replace(old, new, 1)
+    path.write_text(text, encoding='utf-8')
+    print('Patched Firestore student pagination successfully.')
+else:
+    raise SystemExit('Expected student-loading block was not found and pagination is not present; refusing to make an unsafe patch.')
