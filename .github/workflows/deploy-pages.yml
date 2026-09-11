@@ -49,6 +49,8 @@ jobs:
         run: python .github/scripts/patch-universal-answer-key.py
       - name: Apply runtime-safe written-answer normalization
         run: python .github/scripts/patch-answer-normalizer-runtime.py
+      - name: Defer marking until submit
+        run: python .github/scripts/patch-score-on-submit-only.py
       - name: Apply student exam runtime guard
         run: python .github/scripts/patch-student-runtime-guard.py
       - name: Apply PDF.js TypeScript compatibility fix
