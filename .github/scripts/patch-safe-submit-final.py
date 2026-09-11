@@ -4,17 +4,12 @@ import re
 p = Path('app/page.tsx')
 s = p.read_text(encoding='utf-8')
 
-# Add a dedicated final score state. Marking is calculated once in the click
-# handler before the UI enters submitted mode, so a render cannot crash while
-# trying to mark answers.
 state_anchor = '  const [submitted, setSubmitted] = useState(false);'
 if state_anchor not in s:
     raise SystemExit('submitted state anchor not found')
 if 'const [finalScore, setFinalScore]' not in s:
     s = s.replace(state_anchor, state_anchor + '\n  const [finalScore, setFinalScore] = useState<number | null>(null);', 1)
 
-# Replace render-time useMemo scoring with a stable score value and an explicit,
-# crash-safe submit function.
 score_rx = re.compile(r'  const score = useMemo\(\(\) => \{ if \(!submitted\) return 0; return current\.reduce\(\(sum, q\) => \{ const value = answers\[q\.id\]; const correct = q\.responseType === "short" \? \(typeof value === "string" && answerMatches\(value, q\.expectedText \|\| ""\)\) : value === q\.answer; return sum \+ \(correct \? q\.marks : 0\); \}, 0\); \}, \[submitted, answers, current\]\);')
 score_repl = '''  const score = finalScore ?? 0;
   const submitExamSafely = () => {
@@ -39,23 +34,17 @@ score_repl = '''  const score = finalScore ?? 0;
       window.alert("The test could not be marked yet. Your answers are still on the page. Please tell your teacher.");
     }
   };'''
-s, n = score_rx.subn(score_repl, s, count=1)
+s, n = score_rx.subn(lambda _m: score_repl, s, count=1)
 if n != 1:
     raise SystemExit('score block not found')
 
-# Submit buttons must call the safe one-shot scorer instead of only toggling state.
 s = s.replace('onClick={()=>setSubmitted(true)}><CheckCircle2 size={17}/> Submit Test', 'onClick={submitExamSafely}><CheckCircle2 size={17}/> Submit Test')
 s = s.replace('onClick={()=>setSubmitted(true)}><CheckCircle2 size={18}/> Submit Spelling Test', 'onClick={submitExamSafely}><CheckCircle2 size={18}/> Submit Spelling Test')
 
-# Do not recalculate correctness during the submitted render. This was the
-# remaining crash path after the previous typing fix. The final total is already
-# calculated by submitExamSafely.
 s = s.replace('const correct=submitted && typeof value === "string" && answerMatches(value, expected);', 'const correct=false;')
 s = s.replace('className={submitted ? (correct ? "correct" : "wrong") : ""}', 'className={submitted ? "submitted-answer" : ""}')
 s = s.replace('className={`short-answer-input ${submitted ? (typeof selected === "string" && answerMatches(selected, q.expectedText || "") ? "correct" : "wrong") : ""}`}', 'className={`short-answer-input ${submitted ? "submitted-answer" : ""}`}')
 
-# Make the result-saving effect unable to crash the student page. Network or
-# legacy-session issues are logged, while the submitted result screen remains.
 old_effect = '''  useEffect(() => {
     if (!submitted || access !== "student") return;
     if (joinedSession) {
