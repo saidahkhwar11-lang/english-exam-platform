@@ -18,6 +18,23 @@ replacement = r'''  const buildLevelQuestions = (requestedLevel: Level) => {
     );
 
     const standardSource = examContent?.questions.standard || questions.standard;
+    const simpleSpellingSentence = (word: string, fallback: string) => {
+      const key = word.trim().toLowerCase();
+      const simple: Record<string, string> = {
+        attend: "Students _____ school every day.",
+        privacy: "Keep your _____ safe online.",
+        community: "Our _____ includes many people.",
+        attitude: "A good _____ helps you learn.",
+        challenges: "Students face _____ at school.",
+        relate: "I can _____ to her story.",
+        features: "The school has many useful _____.",
+        survive: "People need water to _____.",
+        major: "She chose her university _____ carefully.",
+        variety: "The restaurant has a _____ of food.",
+      };
+      return simple[key] || fallback;
+    };
+
     return source.map((q, index) => {
       // Spelling Part 1 must stay exactly the teacher's uploaded word list at every level.
       if (spellingMode && index < 10) return { ...standardSource[index], id: q.id };
@@ -27,13 +44,23 @@ replacement = r'''  const buildLevelQuestions = (requestedLevel: Level) => {
       const expected = String((standardQuestion as any).expectedText || (q as any).expectedText || "").trim();
 
       if (requestedLevel === "basic") {
+        // Basic spelling must be genuinely simple for weak students: one short sentence only,
+        // with no instructions, first-letter clues, letter counts, or extra explanation.
+        if (spellingMode) {
+          return {
+            ...q,
+            prompt: simpleSpellingSentence(expected, basePrompt),
+            hint: undefined,
+          };
+        }
         const shortClue = expected
-          ? ` Hint: the answer starts with “${expected.charAt(0).toUpperCase()}” and has ${expected.length} letters.`
-          : " Look for the clearest key word or detail before answering.";
-        const prompt = spellingMode
-          ? `Complete the sentence with the correct vocabulary word.${shortClue} ${basePrompt}`
-          : `Basic version: Read the question carefully and focus on the clearest detail. ${basePrompt}${shortClue}`;
-        return { ...q, prompt, hint: shortClue.trim() };
+          ? `Hint: the answer starts with “${expected.charAt(0).toUpperCase()}”.`
+          : "Look for the clearest detail.";
+        return {
+          ...q,
+          prompt: `Basic version: ${basePrompt}`,
+          hint: shortClue,
+        };
       }
 
       // Advanced keeps the same skill, answer, marks and tracker mapping, but removes
@@ -48,4 +75,4 @@ replacement = r'''  const buildLevelQuestions = (requestedLevel: Level) => {
 
 s = s.replace(anchor, replacement, 1)
 p.write_text(s)
-print('level differentiation applied: Standard untouched; Basic scaffolded; Advanced reframed; Spelling Part 1 preserved and Part 2 differentiated')
+print('level differentiation applied: Basic spelling uses short simple sentences only; Standard untouched; Advanced preserved')
