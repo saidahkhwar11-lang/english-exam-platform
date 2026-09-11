@@ -1,0 +1,33 @@
+name: Inspect student UI source
+
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-student-ui.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore migrated source
+        run: |
+          cat .source/payload.* | base64 -d > /tmp/english-exam-platform.tgz
+          tar -xzf /tmp/english-exam-platform.tgz
+      - name: Apply current upgrade
+        run: |
+          cat .github/upgrade/patch.0* | base64 -d | gzip -d > /tmp/platform-upgrade.patch
+          patch -p1 < /tmp/platform-upgrade.patch || true
+          cat .github/upgrade/finalizer.0* | base64 -d | gzip -d > /tmp/finalize-ux-upgrade.py
+          python /tmp/finalize-ux-upgrade.py
+      - name: Print relevant source excerpts
+        run: |
+          echo '--- teacher workspace refs ---'
+          grep -n -C 5 -E 'Teacher workspace|Student test' app/page.tsx || true
+          echo '--- student identity refs ---'
+          grep -n -C 6 -E 'studentName|studentId|Student ID|student\.id|student\.name' app/page.tsx || true
+          echo '--- anti cheating refs ---'
+          grep -n -C 8 -E 'violation|violations|anti-cheat|antiCheat|unlock|kicked|lock' app/page.tsx || true
