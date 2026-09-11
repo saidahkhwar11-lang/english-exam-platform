@@ -23,6 +23,8 @@ jobs:
         run: |
           cat .source/payload.* | base64 -d > /tmp/english-exam-platform.tgz
           tar -xzf /tmp/english-exam-platform.tgz
+      - name: Apply student loading fix
+        run: python .github/scripts/patch-student-pagination.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
