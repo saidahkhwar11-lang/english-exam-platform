@@ -24,15 +24,7 @@ jobs:
           cat .github/upgrade/finalizer.0* | base64 -d | gzip -d > /tmp/finalize-ux-upgrade.py
           python /tmp/finalize-ux-upgrade.py
           python .github/scripts/patch-student-access-identity-anticheat.py
-      - name: Print exam data and library excerpts
+      - name: Print level change and fullscreen excerpts
         run: |
-          echo '--- types and exam constants ---'
-          grep -n -C 12 -E 'type Exam|type Question|LEVELS|levelData|examData|questions|readingText|passage' app/page.tsx | head -n 500 || true
-          echo '--- upload and new exam ---'
-          grep -n -C 15 -E 'uploadedTestFileName|teacher-test-file-picker|startNewExam|Replace|Add Test File' app/page.tsx || true
-          echo '--- exam library ---'
-          grep -n -C 20 -E 'Exam Library|examLibrary|savedExam|saveExam|loadExam|duplicateExam|deleteExam' app/page.tsx || true
-          echo '--- firebase refs ---'
-          grep -n -C 8 -E 'firebase|databaseURL|set\(|get\(|update\(|teacherExam|library' app/page.tsx | head -n 500 || true
-          echo '--- package ---'
-          cat package.json
+          echo '--- level/fullscreen flow ---'
+          grep -n -C 22 -E 'setLevel|requestFullscreen|fullscreen|Level|approve|approval|pendingLevel|requestedLevel|changeLevel' app/page.tsx | head -n 1200 || true
