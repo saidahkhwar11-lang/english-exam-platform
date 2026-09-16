@@ -1,9 +1,9 @@
 from pathlib import Path
+import re
 
 p = Path('app/page.tsx')
 s = p.read_text()
 
-# Exact exam-content isolation intentionally removed the old built-in question fallback.
 current_candidates = [
     '  const current = examContent?.questions[level] || [];',
     '  const current = examContent?.questions[level] || questions[level];',
@@ -19,7 +19,6 @@ if 'const safeCurrentQuestion =' not in s:
         1,
     )
 
-# Clamp all direct question access.
 if 'current[currentQuestion]' in s:
     s = s.replace('current[currentQuestion]', 'current[safeCurrentQuestion]')
 elif 'current[safeCurrentQuestion]' not in s:
@@ -33,15 +32,23 @@ if 'currentQuestion !== safeCurrentQuestion' not in s:
         1,
     )
 
-# Empty content is now a valid state on teacher/home screens. Later layout patches can
-# change the exact JSX wrapper, so do not fail deployment if no matching panel wrapper exists.
-# Direct question reads are already clamped above; optional-chain the remaining common reads.
-s = s.replace('current[safeCurrentQuestion].id', 'current[safeCurrentQuestion]?.id')
-s = s.replace('current[safeCurrentQuestion].prompt', 'current[safeCurrentQuestion]?.prompt')
-s = s.replace('current[safeCurrentQuestion].type', 'current[safeCurrentQuestion]?.type')
-s = s.replace('current[safeCurrentQuestion].options', 'current[safeCurrentQuestion]?.options')
-s = s.replace('current[safeCurrentQuestion].hint', 'current[safeCurrentQuestion]?.hint')
-s = s.replace('current[safeCurrentQuestion].expectedText', 'current[safeCurrentQuestion]?.expectedText')
+# The live artifact proved the non-spelling question panel still rendered while current=[]
+# and then evaluated current[safeCurrentQuestion].id. Guard the whole panel, tolerating
+# whitespace/layout changes introduced by earlier patches.
+if 'current.length > 0 && !textIsMaximized' not in s:
+    patterns = [
+        r'\{!textIsMaximized\s*&&\s*\(\s*<section className="question-panel">',
+        r'\{\(!textIsMaximized\)\s*&&\s*\(\s*<section className="question-panel">',
+    ]
+    changed = False
+    for pat in patterns:
+        s2, count = re.subn(pat, '{current.length > 0 && !textIsMaximized && (\n              <section className="question-panel">', s, count=1)
+        if count:
+            s = s2
+            changed = True
+            break
+    if not changed:
+        raise SystemExit('Question panel wrapper not found; refusing to deploy a build that can still crash on empty exam content.')
 
 p.write_text(s)
-print('student runtime guard applied safely for loaded and empty exam states')
+print('student runtime guard applied: empty exam content cannot render question panel')
