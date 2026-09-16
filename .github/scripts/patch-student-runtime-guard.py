@@ -4,7 +4,6 @@ p = Path('app/page.tsx')
 s = p.read_text()
 
 # Exact exam-content isolation intentionally removed the old built-in question fallback.
-# Support both shapes so this safety patch remains compatible with the current build.
 current_candidates = [
     '  const current = examContent?.questions[level] || [];',
     '  const current = examContent?.questions[level] || questions[level];',
@@ -20,7 +19,7 @@ if 'const safeCurrentQuestion =' not in s:
         1,
     )
 
-# Clamp render-time access when a previous preview/session had more questions.
+# Clamp all direct question access.
 if 'current[currentQuestion]' in s:
     s = s.replace('current[currentQuestion]', 'current[safeCurrentQuestion]')
 elif 'current[safeCurrentQuestion]' not in s:
@@ -34,5 +33,17 @@ if 'currentQuestion !== safeCurrentQuestion' not in s:
         1,
     )
 
+# Critical empty-content guard: after removing the built-in sample fallback, current can
+# legitimately be [] on the home/teacher screen. Never render current[0].id in that state.
+question_panel_anchor = '{!textIsMaximized && (\n              <section className="question-panel">'
+if question_panel_anchor in s:
+    s = s.replace(
+        question_panel_anchor,
+        '{!textIsMaximized && current.length > 0 && (\n              <section className="question-panel">',
+        1,
+    )
+elif '{!textIsMaximized && current.length > 0 && (' not in s:
+    raise SystemExit('Question panel empty-content guard anchor not found; refusing unsafe runtime patch.')
+
 p.write_text(s)
-print('student exam runtime guard applied compatibly with exact exam content')
+print('student runtime guard applied: safe index plus empty exam-content render protection')
