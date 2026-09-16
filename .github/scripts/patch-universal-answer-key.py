@@ -39,14 +39,14 @@ parser = r'''  const normalizeAnswerValue = (value: string) => value
     const keyLines = lines.slice(keyIndex + 1);
     const answerMap: Record<number, string> = {};
     for (const line of keyLines) {
-      const m = line.match(/^(\d+)[.)]\s*(?:[:=\-]\s*)?(.+)$/);
-      if (m) answerMap[Number(m[1])] = m[2].trim();
+      // Accept 1. B, 1) B, 1-B, 1:B, 1 B, and written answers.
+      const m = line.match(/^(\d+)\s*(?:[.)]|[:=\-])?\s*(.+)$/);
+      if (m && m[2].trim()) answerMap[Number(m[1])] = m[2].trim();
     }
-    if (!Object.keys(answerMap).length) throw new Error('The Answer Key is empty or unreadable. Use numbered answers such as “1. B” or “1. community”.');
+    if (!Object.keys(answerMap).length) throw new Error('The Answer Key is empty or unreadable. Use numbered answers such as “1-B” or “1. community”.');
 
     const title = (body.find((line) => !/^(part\s*\d+|reading\s*passage|passage|questions?|listening\s*(text|passage|questions?)|answer\s*key)/i.test(line)) || fileName.replace(/\.[^.]+$/, '')).trim();
 
-    // Dedicated spelling format: Part 1 words are their own keys; Part 2 uses Answer Key – Part 2.
     const p1Index = body.findIndex((line) => /part\s*1.*listen.*spell/i.test(line));
     const p2Index = body.findIndex((line) => /part\s*2.*(vocabulary|context|fill)/i.test(line));
     if (p1Index >= 0 && p2Index > p1Index) {
@@ -71,8 +71,6 @@ parser = r'''  const normalizeAnswerValue = (value: string) => value
       return {title, passages:{basic:'',standard:'',advanced:''}, questions:{basic:standard,standard,advanced:standard}, sourceFileName:fileName, sourceText:rawText};
     }
 
-    // General parser for Reading, Listening, Extra Credit, and other tests.
-    // Each numbered question may be MCQ (A/B/C/D etc.) or a short/fill-in answer.
     const qStarts: Array<{idx:number,n:number,prompt:string}> = [];
     body.forEach((line, idx) => {
       const m = line.match(/^(\d+)[.)]\s*(.+)$/);
@@ -86,10 +84,23 @@ parser = r'''  const normalizeAnswerValue = (value: string) => value
       const next = qi + 1 < qStarts.length ? qStarts[qi+1].idx : body.length;
       const block = body.slice(q0.idx + 1, next);
       const opts: Array<{letter:string,text:string}> = [];
-      for (const line of block) {
-        const om = line.match(/^([A-H])[.)]\s*(.+)$/i);
-        if (om) opts.push({letter:om[1].toUpperCase(), text:om[2].trim()});
+
+      // Word tables can expose choices as separate lines/cells, combined lines,
+      // or a standalone letter followed by the option text. Read all three forms.
+      for (let bi=0; bi<block.length; bi++) {
+        const line = String(block[bi] || '').trim();
+        const standalone = line.match(/^([A-H])[.)]?$/i);
+        if (standalone && bi + 1 < block.length) {
+          opts.push({letter:standalone[1].toUpperCase(), text:String(block[++bi] || '').trim()});
+          continue;
+        }
+        const pieces = line.split(/(?=\b[A-H][.)]\s*)/i).map((x)=>x.trim()).filter(Boolean);
+        for (const piece of pieces) {
+          const om = piece.match(/^([A-H])[.)]\s*(.+)$/i);
+          if (om) opts.push({letter:om[1].toUpperCase(), text:om[2].trim()});
+        }
       }
+
       const key = answerMap[q0.n];
       if (!key) throw new Error(`Missing answer key for question ${q0.n}.`);
 
@@ -100,7 +111,7 @@ parser = r'''  const normalizeAnswerValue = (value: string) => value
         if (letterMatch) answerIndex = opts.findIndex((o) => o.letter === letterMatch[1].toUpperCase());
         if (answerIndex < 0) answerIndex = opts.findIndex((o) => normalizeAnswerValue(o.text) === normalizeAnswerValue(keyTrim.replace(/^[A-H][.)\-:]?\s*/i, '')));
         if (answerIndex < 0) throw new Error(`Answer key for question ${q0.n} does not match any option.`);
-        qs.push({id:qs.length+1, skill:'Question', prompt:q0.prompt, options:opts.map((o)=>o.text), answer:answerIndex, marks:1, responseType:'choice'});
+        qs.push({id:qs.length+1, skill:'Multiple Choice', prompt:q0.prompt, options:opts.map((o)=>o.text), answer:answerIndex, marks:1, responseType:'choice'});
       } else {
         qs.push({id:qs.length+1, skill:'Question', prompt:q0.prompt, options:[], answer:0, marks:1, responseType:'short', expectedText:key});
       }
@@ -117,8 +128,6 @@ parser = r'''  const normalizeAnswerValue = (value: string) => value
 
 s = s[:start] + parser + s[end:]
 
-# Make all short-answer marking use the same safe normalizer. This ignores
-# accidental leading/trailing spaces, Enter/new lines, repeated spaces, and case.
 score_pattern = re.compile(r'  const score = useMemo\(\(\) => current\.reduce\(\(sum, q, index\) => \{.*?\}, 0\), \[answers, current, isSpellingTest\]\);')
 score_repl = '  const score = useMemo(() => current.reduce((sum, q) => { const value = answers[q.id]; const correct = q.responseType === "short" ? (typeof value === "string" && answerMatches(value, q.expectedText || "")) : value === q.answer; return sum + (correct ? q.marks : 0); }, 0), [answers, current]);'
 s, n = score_pattern.subn(score_repl, s, count=1)
@@ -129,8 +138,6 @@ s = s.replace('typeof selected === "string" && selected.trim() === (q.expectedTe
 s = s.replace('value.trim().toLowerCase() === expected.trim().toLowerCase()', 'answerMatches(value, expected)')
 s = s.replace('spellingCloseEnough(value, expected)', 'answerMatches(value, expected)')
 
-# Remove the fixed 10+10 assumption. Prefer parser tags; fall back to half/half
-# for older already-saved spelling exams.
 old_split = '  const spellingPart1 = isSpellingTest ? current.slice(0, 10) : [];\n  const spellingPart2 = isSpellingTest ? current.slice(10, 20) : [];'
 new_split = '''  const taggedSpellingPart1 = isSpellingTest ? current.filter((q) => /Spelling Part 1/i.test(q.skill || "")) : [];
   const taggedSpellingPart2 = isSpellingTest ? current.filter((q) => /Spelling Part 2/i.test(q.skill || "")) : [];
@@ -144,4 +151,4 @@ s = s.replace('<b>/10</b></div>\n              <p className="spelling-instructio
 s = s.replace('<b>/10</b></div>\n              <p className="spelling-instruction">Use the vocabulary', '<b>/{spellingPart2.length}</b></div>\n              <p className="spelling-instruction">Use the vocabulary', 1)
 
 p.write_text(s)
-print('universal answer-key parser and safe marking applied')
+print('universal answer-key parser and safe marking applied; vertical Word A-D choices forced to choice questions')
