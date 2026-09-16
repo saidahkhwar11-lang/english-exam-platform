@@ -4,9 +4,9 @@ import re
 p = Path('app/page.tsx')
 s = p.read_text(encoding='utf-8')
 
-# The core parser expects each A/B/C/D option on its own line. Word table cells can
-# arrive as tabs or as one continuous line. Normalize those boundaries before the
-# existing parser runs. This is deliberately limited to the Exam Platform parser.
+# Normalize DOCX/table and inline A-D option boundaries before the existing
+# Exam Platform parser runs. Using a callable replacement is intentional:
+# Python re.sub otherwise interprets TypeScript regex escapes such as \u00a0.
 pattern = r'const normalizeLines = \(text: string\) => .*?;'
 replacement = r'''const normalizeLines = (text: string) => text
     .replace(/\r/g, "")
@@ -17,13 +17,11 @@ replacement = r'''const normalizeLines = (text: string) => text
     .map((line) => line.trim())
     .filter(Boolean);'''
 
-s2, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
+s2, n = re.subn(pattern, lambda _m: replacement, s, count=1, flags=re.S)
 if n != 1:
     raise SystemExit('Question-only MCQ parser anchor not found; refusing silent patch')
 
-# Keep question-only tests truly passage-free. The existing parser already builds
-# questions and answer keys; this prevents headings/instructions before Q1 from
-# being treated as a reading passage when the file is clearly a quiz.
+# Question-only quizzes should not manufacture a reading passage from headings.
 needle = "const passage=passageLines.join('\\n\\n');"
 if needle in s2:
     s2 = s2.replace(needle, "const passage = qs.length && passageLines.some(line => /reading|passage|text/i.test(line)) ? passageLines.join('\\n\\n') : '';", 1)
