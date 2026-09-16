@@ -35,6 +35,8 @@ jobs:
         run: |
           base64 -d .github/upgrade/exam-processor.b64 > /tmp/patch-exam-processor.py
           python /tmp/patch-exam-processor.py
+      - name: Apply flexible exam structures
+        run: python .github/scripts/patch-flexible-exam-structures.py
       - name: Apply authenticated Exam Library save fix
         run: python .github/scripts/patch-exam-library-save.py
       - name: Apply per-session exam content isolation
