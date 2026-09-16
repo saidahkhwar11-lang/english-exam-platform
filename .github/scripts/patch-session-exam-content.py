@@ -3,43 +3,44 @@ from pathlib import Path
 p = Path('app/page.tsx')
 s = p.read_text()
 
-# Every class session must carry the exact processed exam snapshot that the teacher opened.
+# The uploaded/loaded exam is the only valid source of questions. Never fall back
+# to the old built-in sample exam, because that makes a new exam show old content.
 old_type = 'type JoinedSession = ClassSession & { classId: string; gradeLevel: string; section: string; examName: string };'
-new_type = 'type JoinedSession = ClassSession & { classId: string; gradeLevel: string; section: string; examName: string; examContent?: ExamContent };'
+new_type = 'type JoinedSession = ClassSession & { classId: string; gradeLevel: string; section: string; examName: string; examContent?: ExamContent; timeAllowed?: string; allowedStudentIds?: Record<string, boolean>; allowedStudentNames?: Record<string, string> };'
 if old_type in s:
     s = s.replace(old_type, new_type, 1)
-elif new_type not in s:
-    raise SystemExit('JoinedSession type anchor not found')
 
-old_session = 'const session = { code, active, classId: classroom.id, gradeLevel: classroom.gradeLevel, section: classroom.section, examName: destination.title, assessmentId: destination.id, assessmentTitle: destination.title, maxMark: destination.max, allowedStudentIds, updatedAt: Date.now() };'
-new_session = 'const session = { code, active, classId: classroom.id, gradeLevel: classroom.gradeLevel, section: classroom.section, examName: examName.trim() || destination.title, assessmentId: destination.id, assessmentTitle: destination.title, maxMark: destination.max, allowedStudentIds, examContent, updatedAt: Date.now() };'
-if old_session in s:
-    s = s.replace(old_session, new_session, 1)
-elif new_session not in s:
-    raise SystemExit('class session anchor not found')
+s = s.replace('const current = examContent?.questions[level] || questions[level];', 'const current = examContent?.questions[level] || [];', 1)
+s = s.replace('{examContent?.title || "A New Campus"}', '{examContent?.title || "Exam not loaded"}', 1)
+s = s.replace('{examContent?.passages[level] || passages[level]}', '{examContent?.passages[level] || ""}', 1)
 
-# Do not allow a teacher to open an exam unless its actual uploaded/processed content is present.
-old_guard = 'if (!selectedAssessment) { setSessionMessage("Choose the exact tracker assessment column first."); return; }'
-new_guard = 'if (!selectedAssessment) { setSessionMessage("Choose the exact tracker assessment column first."); return; }\n    if (!examContent) { setSessionMessage("Load or upload the exam content before opening this class."); return; }'
-if new_guard not in s:
-    if old_guard not in s:
-        raise SystemExit('session guard anchor not found')
-    s = s.replace(old_guard, new_guard, 1)
+# Do not let any teacher open a class session without the exact current exam snapshot.
+guard = 'if (!selectedAssessment) { setSessionMessage("Choose the exact tracker assessment column first."); return; }'
+if guard in s and 'Load or upload the exam content before opening this class.' not in s:
+    s = s.replace(guard, guard + '\n    if (!examContent) { setSessionMessage("Load or upload the exam content before opening this class."); return; }', 1)
 
-# Student must receive the content snapshot belonging to this exact exam code.
-old_join = 'if (!session?.active) throw new Error("Invalid, expired, or closed exam code. Please check the code with your teacher.");'
-new_join = 'if (!session?.active) throw new Error("Invalid, expired, or closed exam code. Please check the code with your teacher.");\n        if (!session.examContent) throw new Error("This exam code was created before the latest content update. Please ask your teacher to reopen the exam and use the new code.");'
-if new_join not in s:
-    if old_join not in s:
-        raise SystemExit('student session validation anchor not found')
-    s = s.replace(old_join, new_join, 1)
+# The real processor already stores examContent in every class session. Make the
+# session label use the teacher's current exam name rather than an older tracker title.
+s = s.replace('examName: destination.title, assessmentId: destination.id', 'examName: examName.trim() || destination.title, assessmentId: destination.id', 1)
 
-old_set = 'setJoinedSession(session);\n        fullscreenStarted.current = true;'
-new_set = 'setJoinedSession(session);\n        setExamContent(session.examContent);\n        setExamName(session.examName || session.assessmentTitle || "Exam");\n        setLevel("standard");\n        fullscreenStarted.current = true;'
-if new_set not in s:
-    if old_set not in s:
-        raise SystemExit('student joined session anchor not found')
-    s = s.replace(old_set, new_set, 1)
+# Student codes must contain exam content. Old/incomplete codes are rejected rather
+# than silently displaying the built-in sample exam.
+active_check = 'if (!session?.active) throw new Error("Invalid, expired, or closed exam code. Please check the code with your teacher.");'
+if active_check in s and 'This exam code has no exam content.' not in s:
+    s = s.replace(active_check, active_check + '\n        if (!session.examContent) throw new Error("This exam code has no exam content. Please ask your teacher to reopen the exam and use a fresh code.");', 1)
+
+# Always replace the current browser exam with the exact snapshot attached to the code.
+s = s.replace('if (session.examContent) setExamContent(session.examContent);', 'setExamContent(session.examContent);', 1)
+
+# Teacher preview must not open old/sample questions if nothing is currently loaded.
+old_preview = '<button type="button" onClick={() => setActiveTab("student")} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 px-4 py-3 font-bold text-[#0d2340] hover:bg-cyan-300"><Play size={18} /> Preview {levelMeta[level].label} test</button>'
+new_preview = '<button type="button" disabled={!examContent} onClick={() => { if (!examContent) return; setAnswers({}); setSubmitted(false); setCurrentQuestion(0); setActiveTab("student"); }} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 px-4 py-3 font-bold text-[#0d2340] hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"><Play size={18} /> {examContent ? `Preview ${levelMeta[level].label} test` : "Load an exam to preview"}</button>'
+if old_preview in s:
+    s = s.replace(old_preview, new_preview, 1)
+
+# Level summary also must not report the built-in sample as if it were the new exam.
+s = s.replace('(examContent?.questions[item] || questions[item]).length', '(examContent?.questions[item] || []).length')
+s = s.replace('(examContent?.questions[item] || questions[item]).reduce((sum,q)=>sum+q.marks,0)', '(examContent?.questions[item] || []).reduce((sum,q)=>sum+q.marks,0)')
 
 p.write_text(s)
-print('session exam-content isolation applied for every exam type and teacher')
+print('stale exam fallback removed; exact exam content enforced for preview and student codes')
