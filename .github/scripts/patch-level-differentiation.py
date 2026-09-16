@@ -3,12 +3,18 @@ from pathlib import Path
 p = Path('app/page.tsx')
 s = p.read_text()
 
-anchor = '  const current = examContent?.questions[level] || questions[level];'
-if anchor not in s:
+# Exact session isolation removes all built-in sample-question fallbacks.
+# Accept the current safe shape and the older shape, but generate only from uploaded/loaded exam content.
+anchor_candidates = [
+    '  const current = examContent?.questions[level] || [];',
+    '  const current = examContent?.questions[level] || questions[level];',
+]
+anchor = next((x for x in anchor_candidates if x in s), None)
+if not anchor:
     raise SystemExit('level question list anchor not found')
 
 replacement = r'''  const buildLevelQuestions = (requestedLevel: Level) => {
-    const source = examContent?.questions[requestedLevel] || questions[requestedLevel];
+    const source = examContent?.questions[requestedLevel] || [];
     if (requestedLevel === "standard") return source;
 
     const spellingMode = /spelling/i.test(joinedSession?.examName || examName || "") || Boolean(
@@ -17,7 +23,7 @@ replacement = r'''  const buildLevelQuestions = (requestedLevel: Level) => {
       /Part\s*2\s*[–-]\s*Vocabulary\s*in\s*Context/i.test(examContent.sourceText)
     );
 
-    const standardSource = examContent?.questions.standard || questions.standard;
+    const standardSource = examContent?.questions.standard || [];
     const simpleSpellingSentence = (word: string, fallback: string) => {
       const key = word.trim().toLowerCase();
       const simple: Record<string, string> = {
@@ -53,15 +59,14 @@ replacement = r'''  const buildLevelQuestions = (requestedLevel: Level) => {
     };
 
     return source.map((q, index) => {
-      // Spelling Part 1 must stay exactly the teacher's uploaded word list at every level.
-      if (spellingMode && index < 10) return { ...standardSource[index], id: q.id };
+      // Spelling Part 1 stays exactly the teacher's uploaded word list at every level.
+      if (spellingMode && index < 10 && standardSource[index]) return { ...standardSource[index], id: q.id };
 
       const standardQuestion = standardSource[index] || q;
       const basePrompt = String(standardQuestion.prompt || q.prompt || "").trim();
       const expected = String((standardQuestion as any).expectedText || (q as any).expectedText || "").trim();
 
       if (requestedLevel === "basic") {
-        // Basic spelling: one short simple sentence only.
         if (spellingMode) {
           return { ...q, prompt: simpleSpellingSentence(expected, basePrompt), hint: undefined };
         }
@@ -71,8 +76,6 @@ replacement = r'''  const buildLevelQuestions = (requestedLevel: Level) => {
         return { ...q, prompt: `Basic version: ${basePrompt}`, hint: shortClue };
       }
 
-      // Advanced spelling: keep the difficulty in the sentence itself. Do not repeat
-      // instructions or explanations inside every question card.
       if (spellingMode) {
         return { ...q, prompt: advancedSpellingSentence(expected, basePrompt), hint: undefined };
       }
@@ -85,4 +88,4 @@ replacement = r'''  const buildLevelQuestions = (requestedLevel: Level) => {
 
 s = s.replace(anchor, replacement, 1)
 p.write_text(s)
-print('level differentiation applied: Basic and Advanced spelling use clean sentences; Standard untouched')
+print('level differentiation applied compatibly with exact exam-session content')
