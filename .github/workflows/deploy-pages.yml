@@ -45,6 +45,8 @@ jobs:
         run: python .github/scripts/patch-strict-short-answers.py
       - name: Apply automatic tracker assessment routing
         run: python .github/scripts/patch-tracker-assessment-routing.py
+      - name: Sync maximum mark with Assessment Tracker column
+        run: python .github/scripts/patch-tracker-max-mark-sync.py
       - name: Apply teacher logout and session type fix
         run: python .github/scripts/patch-teacher-logout-and-session-type.py
       - name: Apply spelling test student layout
