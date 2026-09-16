@@ -39,6 +39,8 @@ jobs:
         run: python .github/scripts/patch-flexible-exam-structures.py
       - name: Apply Word table exam compatibility
         run: python .github/scripts/patch-docx-table-mcq.py
+      - name: Apply question-only MCQ parser fix
+        run: python .github/scripts/patch-question-only-mcq-parser.py
       - name: Apply authenticated Exam Library save fix
         run: python .github/scripts/patch-exam-library-save.py
       - name: Apply per-session exam content isolation
