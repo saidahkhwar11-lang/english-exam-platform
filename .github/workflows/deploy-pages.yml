@@ -77,6 +77,8 @@ jobs:
         run: python .github/scripts/patch-submit-feedback.py
       - name: Apply PDF.js TypeScript compatibility fix
         run: python .github/scripts/patch-pdfjs-types.py
+      - name: Apply Word MCQ import fix
+        run: python .github/scripts/patch-mcq-word-import.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
