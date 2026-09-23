@@ -79,8 +79,6 @@ jobs:
         run: python .github/scripts/patch-pdfjs-types.py
       - name: Apply Word MCQ import fix
         run: python .github/scripts/patch-mcq-word-import.py
-      - name: Restore two-warning anti-cheating rule
-        run: python .github/scripts/patch-two-warning-anticheat.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
