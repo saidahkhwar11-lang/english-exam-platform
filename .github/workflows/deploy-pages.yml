@@ -81,6 +81,8 @@ jobs:
         run: python .github/scripts/patch-mcq-word-import.py
       - name: Support spelling MCQs alongside typed spelling tests
         run: python .github/scripts/patch-spelling-mcq-mode.py
+      - name: Hide reading panel for exams without a passage
+        run: python .github/scripts/patch-hide-empty-reading-panel.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
