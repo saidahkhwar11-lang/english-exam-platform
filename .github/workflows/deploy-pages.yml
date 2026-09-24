@@ -87,6 +87,10 @@ jobs:
         run: python .github/scripts/patch-reading-paragraphs.py
       - name: Give Basic MCQs one fewer incorrect choice
         run: python .github/scripts/patch-basic-mcq-options.py
+      - name: Add sample exam template to teacher workspace
+        run: |
+          python .github/scripts/patch-exam-template-download.py
+          cp .github/assets/Sample-English-Exam-Template.docx public/Sample-English-Exam-Template.docx
       - uses: actions/setup-node@v4
         with:
           node-version: 22
