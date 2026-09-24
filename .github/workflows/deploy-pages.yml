@@ -85,6 +85,8 @@ jobs:
         run: python .github/scripts/patch-hide-empty-reading-panel.py
       - name: Preserve uploaded reading paragraphs
         run: python .github/scripts/patch-reading-paragraphs.py
+      - name: Give Basic MCQs one fewer incorrect choice
+        run: python .github/scripts/patch-basic-mcq-options.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
