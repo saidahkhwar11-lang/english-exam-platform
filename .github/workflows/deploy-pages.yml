@@ -83,6 +83,8 @@ jobs:
         run: python .github/scripts/patch-spelling-mcq-mode.py
       - name: Hide reading panel for exams without a passage
         run: python .github/scripts/patch-hide-empty-reading-panel.py
+      - name: Preserve uploaded reading paragraphs
+        run: python .github/scripts/patch-reading-paragraphs.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
