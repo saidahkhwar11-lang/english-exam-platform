@@ -97,6 +97,8 @@ jobs:
         run: python .github/scripts/patch-teacher-exam-actions.py
       - name: Build shared grade exam library
         run: python .github/scripts/patch-shared-grade-library.py
+      - name: Manage personal exam copies
+        run: python .github/scripts/patch-personal-exam-edit.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
