@@ -93,6 +93,8 @@ jobs:
           cp .github/assets/Sample-English-Exam-Template.docx public/Sample-English-Exam-Template.docx
       - name: Accept teacher reading and spelling exam formats
         run: python .github/scripts/patch-accepted-exam-formats.py
+      - name: Show teacher save errors and New Exam confirmation
+        run: python .github/scripts/patch-teacher-exam-actions.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
