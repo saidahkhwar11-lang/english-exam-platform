@@ -95,7 +95,7 @@ jobs:
           cp .github/assets/Sample-English-Exam-Template.docx public/Sample-English-Exam-Template.docx
       - name: Add multi-text reading exam template
         run: |
-          base64 -d .github/assets/Multi-Text-Reading-Exam-Template.docx.b64 > public/Multi-Text-Reading-Exam-Template.docx
+          python .github/scripts/generate-multi-text-template.py
           python .github/scripts/patch-multi-text-template-download.py
       - name: Accept teacher reading and spelling exam formats
         run: python .github/scripts/patch-accepted-exam-formats.py
