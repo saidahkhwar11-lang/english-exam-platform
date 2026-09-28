@@ -93,6 +93,10 @@ jobs:
         run: |
           python .github/scripts/patch-exam-template-download.py
           cp .github/assets/Sample-English-Exam-Template.docx public/Sample-English-Exam-Template.docx
+      - name: Add multi-text reading exam template
+        run: |
+          cp .github/assets/Multi-Text-Reading-Exam-Template.docx public/Multi-Text-Reading-Exam-Template.docx
+          python .github/scripts/patch-multi-text-template-download.py
       - name: Accept teacher reading and spelling exam formats
         run: python .github/scripts/patch-accepted-exam-formats.py
       - name: Show teacher save errors and New Exam confirmation
