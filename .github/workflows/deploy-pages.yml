@@ -75,6 +75,8 @@ jobs:
         run: python .github/scripts/patch-safe-submit-final.py
       - name: Apply post-submit feedback
         run: python .github/scripts/patch-submit-feedback.py
+      - name: Hide student answers after submission
+        run: python .github/scripts/patch-hide-post-submit-answers.py
       - name: Apply PDF.js TypeScript compatibility fix
         run: python .github/scripts/patch-pdfjs-types.py
       - name: Apply Word MCQ import fix
