@@ -109,7 +109,7 @@ second_mcq_fix='''  const secondTextStart=lines.findIndex((line,index)=>index>0 
   }'''
 target='''  const starts:number[]=[];'''
 if second_mcq_fix not in s and target in s:
-    s=s.replace(target,second_mcq_fix+"\\n"+target,1)
+    s=s.replace(target,second_mcq_fix+"\n"+target,1)
 
 p.write_text(s,encoding="utf-8")
 
