@@ -63,7 +63,7 @@ new='''  const sourceReading = examContent?.sourceText ? readingSource(examConte
   const readingTitle = examContent?.title || sourceReading.title || "Exam not loaded";
   const readingSections = readingQuestionSections(examContent?.sourceText || "", readingText, current.length);
   const hasMultipleReadingTexts = readingSections.length > 1;
-  const hasReadingPassage = Boolean(readingText.trim()) || hasMultipleReadingTexts;'''
+  const hasReadingPassage = Boolean(readingText.trim()) || hasMultipleReadingTexts;\n  const activeReadingSection = hasMultipleReadingTexts ? (readingSections.find((section) => currentQuestion >= section.start && currentQuestion < section.end) || readingSections[0]) : null;\n  const visibleReadingTitle = activeReadingSection?.title || readingTitle;\n  const visibleReadingText = activeReadingSection?.passage || readingText;'''
 if old in s:
     s=s.replace(old,new,1)
 elif 'const readingSections = readingQuestionSections' not in s:
