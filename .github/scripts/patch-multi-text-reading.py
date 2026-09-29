@@ -86,6 +86,17 @@ if map_anchor in s and 'readingSections.find((section) => section.start === inde
 elif 'readingSections.find((section) => section.start === index)' not in s:
     print("Question renderer has changed; continuing without altering the current renderer")
 
+
+# Prevent a following Text/Passage section from becoming extra answer choices.
+old_question_block='''      const q0=qStarts[qi]; const next=qi+1<qStarts.length?qStarts[qi+1].idx:body.length;
+      const block=body.slice(q0.idx+1,next);'''
+new_question_block='''      const q0=qStarts[qi]; const next=qi+1<qStarts.length?qStarts[qi+1].idx:body.length;
+      const rawBlock=body.slice(q0.idx+1,next);
+      const nextTextBoundary=rawBlock.findIndex((line)=>/^(?:reading\\s+)?(?:text|passage)\\s*\\d+\\b/i.test(line.trim()));
+      const block=nextTextBoundary>=0?rawBlock.slice(0,nextTextBoundary):rawBlock;'''
+if old_question_block in s:
+    s=s.replace(old_question_block,new_question_block,1)
+
 p.write_text(s,encoding="utf-8")
 
 css=Path("app/globals.css")
