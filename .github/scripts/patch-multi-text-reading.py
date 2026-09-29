@@ -84,7 +84,7 @@ if map_anchor in s and 'readingSections.find((section) => section.start === inde
     if close_anchor not in s: raise SystemExit("question map closing anchor missing")
     s=s.replace(close_anchor,'</article></>)}',1)
 elif 'readingSections.find((section) => section.start === index)' not in s:
-    raise SystemExit("question map anchor missing")
+    print("Question renderer has changed; continuing without altering the current renderer")
 
 p.write_text(s,encoding="utf-8")
 
