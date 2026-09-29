@@ -104,7 +104,7 @@ mcq_guard='''      const choiceLines=block.filter((line)=>/^[A-H][.)]\\s+\\S/i.t
       if(choiceLines.length>=2){
         const choices=choiceLines.map((line)=>line.trim().replace(/^[A-H][.)]\\s+/i,""));
         const letters=choiceLines.map((line)=>line.trim().match(/^([A-H])[.)]/i)?.[1]?.toUpperCase() || "");
-        const answerLetter=(answerMap[q0.num]||"").toUpperCase();
+        const answerLetter=(answerMap[q0.n]||"").toUpperCase();
         const answerIndex=Math.max(0,letters.indexOf(answerLetter));
         parsed.push({prompt:q0.prompt,type:"mcq",options:choices,answerIndex,marks:1});
         continue;
