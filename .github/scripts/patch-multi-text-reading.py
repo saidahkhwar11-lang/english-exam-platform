@@ -99,6 +99,23 @@ if old_question_block in s:
 
 
 
+
+# Q11 in a two-text reading exam is a normal MCQ. If the core parser classified
+# it as written even though its source block contains A-D choices, convert only
+# that parsed question to MCQ.
+q11_fix='''  if(q0.n===11 && block.filter((line)=>/^[A-D][.)]\\s+\\S/i.test(line.trim())).length>=2){
+        const q11Choices=block.filter((line)=>/^[A-D][.)]\\s+\\S/i.test(line.trim()));
+        const q11Options=q11Choices.map((line)=>line.trim().replace(/^[A-D][.)]\\s+/i,""));
+        const q11Letters=q11Choices.map((line)=>line.trim().charAt(0).toUpperCase());
+        const q11Answer=(answerMap[q0.n]||"").toUpperCase();
+        const q11AnswerIndex=Math.max(0,q11Letters.indexOf(q11Answer));
+        qs.push({prompt:q0.prompt,type:"mcq",options:q11Options,answerIndex:q11AnswerIndex,marks:1});
+        continue;
+      }'''
+anchor='''      // DOCX tables sometimes flatten the entire row into: Question.A. optionB. optionC....'''
+if q11_fix not in s and anchor in s:
+    s=s.replace(anchor,q11_fix+"\\n"+anchor,1)
+
 p.write_text(s,encoding="utf-8")
 
 css=Path("app/globals.css")
