@@ -98,22 +98,6 @@ if old_question_block in s:
     s=s.replace(old_question_block,new_question_block,1)
 
 
-# The source parser can miss MCQ choices after a passage boundary. Reclassify any
-# parsed question with A-D lines in its source block as MCQ.
-mcq_guard='''      const choiceLines=block.filter((line)=>/^[A-H][.)]\\s+\\S/i.test(line.trim()));
-      if(choiceLines.length>=2){
-        const choices=choiceLines.map((line)=>line.trim().replace(/^[A-H][.)]\\s+/i,""));
-        const letters=choiceLines.map((line)=>line.trim().match(/^([A-H])[.)]/i)?.[1]?.toUpperCase() || "");
-        const answerLetter=(answerMap[q0.n]||"").toUpperCase();
-        const answerIndex=Math.max(0,letters.indexOf(answerLetter));
-        parsed.push({prompt:q0.prompt,type:"mcq",options:choices,answerIndex,marks:1});
-        continue;
-      }'''
-if mcq_guard not in s:
-    anchor='''      const block=nextTextBoundary>=0?rawBlock.slice(0,nextTextBoundary):rawBlock;'''
-    if anchor in s:
-        s=s.replace(anchor,anchor+"\n"+mcq_guard,1)
-
 p.write_text(s,encoding="utf-8")
 
 css=Path("app/globals.css")
