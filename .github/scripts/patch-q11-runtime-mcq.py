@@ -3,11 +3,11 @@ from pathlib import Path
 p=Path("app/page.tsx")
 s=p.read_text(encoding="utf-8")
 
-anchor='  const current = examContent?.questions[level] || questions[level];'
+anchor='  const current = buildLevelQuestions(level);'
 if anchor not in s:
-    raise SystemExit("current questions anchor missing")
+    raise SystemExit("current question builder anchor missing")
 
-replacement=r'''  const currentBase = examContent?.questions[level] || questions[level];
+replacement=r'''  const currentBase = buildLevelQuestions(level);
   const current = currentBase.map((question, index) => {
     if (index !== 10 || !examContent?.sourceText) return question;
     const lines = examContent.sourceText.replace(/\r/g, "").split("\n").map((line) => line.trim()).filter(Boolean);
@@ -19,17 +19,17 @@ replacement=r'''  const currentBase = examContent?.questions[level] || questions
       if (!match) break;
       options.push(match[1].trim());
     }
-    if (options.length < 2) return question;
+    if (options.length !== 4) return question;
     const keyStart=lines.findIndex((line)=>/answer\s*key/i.test(line));
-    let letter="A";
+    let answer=question.answer;
     if(keyStart>=0){
       const keyText=lines.slice(keyStart).join(" ");
       const match=keyText.match(/(?:^|\s)11[.)]\s*([A-D])\b/i);
-      if(match) letter=match[1].toUpperCase();
+      if(match) answer=match[1].toUpperCase().charCodeAt(0)-65;
     }
-    return {...question, skill:"Multiple Choice", options, answer:Math.max(0,letter.charCodeAt(0)-65)};
+    return {...question, skill:"Multiple Choice", options, answer, responseType:"choice" as const, expectedText:undefined};
   });'''
 
 s=s.replace(anchor,replacement,1)
 p.write_text(s,encoding="utf-8")
-print("Q11 runtime MCQ repair applied")
+print("Focused Q11 MCQ runtime repair applied")
