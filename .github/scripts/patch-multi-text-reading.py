@@ -72,7 +72,7 @@ elif 'const readingSections = readingQuestionSections' not in s:
 # For multi-text exams, hide the old single-passage panel; each passage is inserted
 # directly before its own question group below.
 old_display='<h2>{readingTitle}</h2>{passageParagraphs(readingText).map((paragraph, index) => <p key={index}>{paragraph}</p>)}'
-new_display='<h2>{readingTitle}</h2>{!hasMultipleReadingTexts && passageParagraphs(readingText).map((paragraph, index) => <p key={index}>{paragraph}</p>)}{hasMultipleReadingTexts && <p className="multi-reading-note">{readingSections.length} reading texts · each text appears with its own questions below.</p>}'
+new_display='<h2>{visibleReadingTitle}</h2>{passageParagraphs(visibleReadingText).map((paragraph, index) => <p key={index}>{paragraph}</p>)}{hasMultipleReadingTexts && <p className="multi-reading-note">Text {activeReadingSection?.id || 1} of {readingSections.length} · Questions {(activeReadingSection?.start || 0) + 1}–{activeReadingSection?.end || current.length}</p>}'
 if old_display in s:
     s=s.replace(old_display,new_display,1)
 
