@@ -112,7 +112,7 @@ mcq_guard='''      const choiceLines=block.filter((line)=>/^[A-H][.)]\\s+\\S/i.t
 if mcq_guard not in s:
     anchor='''      const block=nextTextBoundary>=0?rawBlock.slice(0,nextTextBoundary):rawBlock;'''
     if anchor in s:
-        s=s.replace(anchor,anchor+"\\n"+mcq_guard,1)
+        s=s.replace(anchor,anchor+"\n"+mcq_guard,1)
 
 p.write_text(s,encoding="utf-8")
 
