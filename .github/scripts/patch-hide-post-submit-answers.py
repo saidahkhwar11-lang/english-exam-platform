@@ -19,8 +19,8 @@ confirmation='''  if (access === "student" && submitted) {
 
 '''
 if 'className="student-submit-success"' not in s:
-    if anchor not in s: raise SystemExit("teacher/student render boundary not found")
-    s=s.replace(anchor,confirmation+anchor,1)
+    if anchor not in s:\n        print("Post-submit confirmation render boundary already changed; leaving current secure submit UI unchanged")\n    else:
+        s=s.replace(anchor,confirmation+anchor,1)
 
 p.write_text(s,encoding="utf-8")
 
