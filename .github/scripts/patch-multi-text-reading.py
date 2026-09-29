@@ -98,6 +98,19 @@ if old_question_block in s:
     s=s.replace(old_question_block,new_question_block,1)
 
 
+
+# Normalize the second passage's first question choices before the existing parser runs.
+# Word extraction can leave A-D choices attached to Q11 after a Text 2 boundary.
+second_mcq_fix='''  const secondTextStart=lines.findIndex((line,index)=>index>0 && /^(?:reading\\s+)?(?:text|passage)\\s*2\\b/i.test(line.trim()));
+  if(secondTextStart>=0){
+    for(let i=secondTextStart;i<lines.length;i++){
+      lines[i]=lines[i].replace(/\\s+([A-D])[.)]\\s+(?=\\S)/g,"\\n$1. ");
+    }
+  }'''
+target='''  const starts:number[]=[];'''
+if second_mcq_fix not in s and target in s:
+    s=s.replace(target,second_mcq_fix+"\\n"+target,1)
+
 p.write_text(s,encoding="utf-8")
 
 css=Path("app/globals.css")
