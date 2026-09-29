@@ -111,6 +111,8 @@ jobs:
         run: python .github/scripts/patch-shared-exam-customize.py
       - name: Clarify shared grade exam status
         run: python .github/scripts/patch-shared-library-labels.py
+      - name: Apply private-first exam library workflow
+        run: python .github/scripts/patch-private-first-library.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
