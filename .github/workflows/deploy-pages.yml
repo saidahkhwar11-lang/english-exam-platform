@@ -109,6 +109,8 @@ jobs:
         run: python .github/scripts/patch-personal-exam-edit.py
       - name: Customize shared exams for teacher tracker columns
         run: python .github/scripts/patch-shared-exam-customize.py
+      - name: Clarify shared grade exam status
+        run: python .github/scripts/patch-shared-library-labels.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22
