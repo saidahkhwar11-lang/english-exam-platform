@@ -89,6 +89,9 @@ jobs:
         run: python .github/scripts/patch-reading-paragraphs.py
       - name: Support multiple reading texts in one exam
         run: python .github/scripts/patch-multi-text-reading.py
+      - name: Preserve complete uploaded exam text and options
+        run: python .github/scripts/patch-full-exam-text-preservation.py
+
       - name: Repair Question 11 MCQ after second reading text
         run: python .github/scripts/patch-q11-runtime-mcq.py
       - name: Give Basic MCQs one fewer incorrect choice
