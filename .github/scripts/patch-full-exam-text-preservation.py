@@ -11,28 +11,8 @@ replacements=[
 ]
 # Do not globally remove slices; only strengthen extraction/normalization below.
 
-# Word paragraphs + tables: preserve all text nodes in document order rather than p-only.
-old='''const htmlExamText = (html: string) => {
-  const parsed = new DOMParser().parseFromString(html, "text/html");
-  return Array.from(parsed.body.querySelectorAll("p")).map((paragraph) => {
-    const copy = paragraph.cloneNode(true) as HTMLElement;
-    copy.querySelectorAll("br").forEach(br => br.replaceWith("\\n"));
-    return (copy.textContent || "").trim();
-  }).filter(Boolean).join("\\n\\n");
-};'''
-new='''const htmlExamText = (html: string) => {
-  const parsed = new DOMParser().parseFromString(html, "text/html");
-  const blocks = Array.from(parsed.body.querySelectorAll("p, li, td, th"));
-  return blocks.map((block) => {
-    const copy = block.cloneNode(true) as HTMLElement;
-    copy.querySelectorAll("br").forEach(br => br.replaceWith("\n"));
-    const text = (copy.textContent || "").replace(/\u00a0/g, " ").trim();
-    const tag = block.tagName.toLowerCase();
-    return { text, separator: tag === "p" || tag === "li" ? "\n\n" : "\n" };
-  }).filter(item => Boolean(item.text)).map((item, index, all) => item.text + (index < all.length - 1 ? item.separator : "")).join("");
-};'''
-if old in s:
-    s=s.replace(old,new,1)
+# Word paragraph extraction is handled by patch-reading-paragraphs.py.
+# Do not replace htmlExamText here; that helper must retain double newlines between Word paragraphs.
 
 # Make passage detection accept numbered question-range headings and keep everything before the first real question.
 oldq='''const questionIndex = lines.findIndex((line, index) => index > titleIndex && /^questions?$/i.test(line.trim()));'''
