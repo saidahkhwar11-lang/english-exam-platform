@@ -64,18 +64,20 @@ assert s.count(old_pdf) == 1, 'PDF extraction anchor missing or repeated'
 s = s.replace(old_pdf, new_pdf, 1)
 
 old_docx = "else if (ext==='docx') { const {default:mammoth}=await import('mammoth/mammoth.browser'); const result=await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()}); text=result.value; }"
-new_docx = "else if (ext==='docx') { const {default:mammoth}=await import('mammoth/mammoth.browser'); const bytes=await file.arrayBuffer(); const [raw, formatted]=await Promise.all([mammoth.extractRawText({arrayBuffer:bytes}), mammoth.convertToHtml({arrayBuffer:bytes})]); text=raw.value; docxReading=readingSource(htmlExamText(formatted.value)); }"
+new_docx = "else if (ext==='docx') { const {default:mammoth}=await import('mammoth/mammoth.browser'); const bytes=await file.arrayBuffer(); const [raw, formatted]=await Promise.all([mammoth.extractRawText({arrayBuffer:bytes}), mammoth.convertToHtml({arrayBuffer:bytes})]); text=raw.value; docxSourceText=htmlExamText(formatted.value); docxReading=readingSource(docxSourceText); }"
 assert s.count(old_docx) == 1, 'Word extraction anchor missing or repeated'
 s = s.replace(old_docx, new_docx, 1)
 old_process = "      const ext=file.name.split('.').pop()?.toLowerCase(); let text='';"
 assert s.count(old_process) == 1, 'file processing anchor missing or repeated'
-s = s.replace(old_process, old_process + " let docxReading={title:'',passage:''};", 1)
+s = s.replace(old_process, old_process + " let docxReading={title:'',passage:''}; let docxSourceText='';", 1)
 old_content = '      const content=parseTeacherTest(text,file.name); setExamContent(content);'
 new_content = '''      const content=parseTeacherTest(text,file.name);
       if (docxReading.passage) {
         content.title=docxReading.title;
         content.passages={basic:docxReading.passage,standard:docxReading.passage,advanced:docxReading.passage};
       }
+      // Keep the HTML-derived Word text as sourceText because it preserves real paragraph breaks.
+      if (docxSourceText) content.sourceText=docxSourceText;
       setExamContent(content);'''
 assert s.count(old_content) == 1, 'saved exam content anchor missing or repeated'
 s = s.replace(old_content, new_content, 1)
