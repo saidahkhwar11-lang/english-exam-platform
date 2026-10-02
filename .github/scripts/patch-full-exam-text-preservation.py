@@ -25,9 +25,11 @@ new='''const htmlExamText = (html: string) => {
   const blocks = Array.from(parsed.body.querySelectorAll("p, li, td, th"));
   return blocks.map((block) => {
     const copy = block.cloneNode(true) as HTMLElement;
-    copy.querySelectorAll("br").forEach(br => br.replaceWith("\\n"));
-    return (copy.textContent || "").replace(/\\u00a0/g, " ").trim();
-  }).filter(Boolean).join("\\n");
+    copy.querySelectorAll("br").forEach(br => br.replaceWith("\n"));
+    const text = (copy.textContent || "").replace(/\u00a0/g, " ").trim();
+    const tag = block.tagName.toLowerCase();
+    return { text, separator: tag === "p" || tag === "li" ? "\n\n" : "\n" };
+  }).filter(item => Boolean(item.text)).map((item, index, all) => item.text + (index < all.length - 1 ? item.separator : "")).join("");
 };'''
 if old in s:
     s=s.replace(old,new,1)
