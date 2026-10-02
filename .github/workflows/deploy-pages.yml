@@ -120,6 +120,8 @@ jobs:
         run: python .github/scripts/patch-shared-library-labels.py
       - name: Apply private-first exam library workflow
         run: python .github/scripts/patch-private-first-library.py
+      - name: Allow direct use from Shared Library
+        run: python .github/scripts/patch-shared-direct-use.py
       # My Library is always rendered, including when a teacher has zero saved exams.
       - uses: actions/setup-node@v4
         with:
