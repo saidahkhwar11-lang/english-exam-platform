@@ -83,6 +83,6 @@ replace('        const roundedScore = Math.round((Number(score) / safeTotal) * s
 replace('score: roundedScore, max: safeMax, rawScore: Number(score) || 0, rawMax: safeTotal, violations,','score: roundedScore, max: safeMax, bonusScore: awardedBonus, rawScore: Number(score) || 0, rawMax: safeTotal, violations,')
 replace('{q.hint && <p className="question-hint">','{q.skill === "Vocabulary" && examContent?.wordBank?.length ? <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 mb-3"><strong>Word Box: </strong>{examContent.wordBank.join("  ·  ")}</div> : null}{q.hint && <p className="question-hint">')
 replace('placeholder="Type your answer exactly"','placeholder={q.skill === "Vocabulary" ? "Choose a word from the box" : "Type your answer exactly"}')
-replace('setProcessingMessage(\`Processed \${content.questions.standard.length} questions. Basic shows one fewer incorrect choice per MCQ; Standard keeps the teacher’s original choices.\`);','setProcessingMessage(content.wordBank ? \`Three-part exam ready: \${content.questions.standard.length} questions (Reading, Grammar, Vocabulary). \${content.bonusLimit || 0} possible bonus marks; bonus marks are determined by each class's matching Tracker maximum at submission.\` : \`Processed \${content.questions.standard.length} questions. Basic shows one fewer incorrect choice per MCQ; Standard keeps the teacher’s original choices.\`);')
+
 p.write_text(s)
 print('Three-part Reading / Grammar / Vocabulary + explicit bonus marking installed')
