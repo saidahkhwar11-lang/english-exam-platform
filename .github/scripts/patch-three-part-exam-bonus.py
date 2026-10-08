@@ -63,19 +63,26 @@ helper=r'''
         }
       }
     }
-    // In the uploaded CA1 Reading Assessment 2, Q21 and Q22 are the two bonus items.
-    // Mark them as bonus only for this identified 22-question / 2-bonus format;
-    // do not alter older exams or automatically award unattempted bonus marks.
-    if(bonusLimit===2 && questions.length===22 && bonusStart<0 &&
-       questions.some(q=>q.id===21) && questions.some(q=>q.id===22)){
-      questions.forEach(q=>{if(q.id===21||q.id===22)q.bonus=true;});
-    }
-    if(questions.filter(q=>q.bonus).length>bonusLimit)throw new Error('Bonus questions exceed the stated bonus limit.');
+    // If the paper states its regular maximum, every additional one-mark
+    // question at the end is a bonus question. Never mutate stored exams.
+    const heading=lines.slice(0,p1).join(' ');
+    const declaredMax=heading.match(/(?:total\s*marks?|exam\s*marks?|out\s*of|maximum\s*marks?)\s*[:=]?\s*(\d+)/i);
+    const regularMax=declaredMax ? Number(declaredMax[1]) : (
+      bonusLimit>0 ? questions.length-bonusLimit : questions.length
+    );
+    if(!Number.isInteger(regularMax)||regularMax<1||regularMax>questions.length)
+      throw new Error('Invalid regular exam maximum.');
+    const extraCount=questions.length-regularMax;
+    // All questions are worth one mark in this format.
+    questions.forEach((q,i)=>{q.bonus=i>=regularMax;});
+    const computedBonusLimit=extraCount;
+    if(questions.filter(q=>q.bonus).length!==computedBonusLimit)
+      throw new Error('Bonus question count mismatch.');
     if(!questions.length||questions.some((q,i)=>i>0&&q.id<=questions[i-1].id))throw new Error('Questions must be numbered in order.');
     if(!['Reading Comprehension','Grammar','Vocabulary'].every(skill=>questions.some(q=>q.skill===skill)))throw new Error('All three parts must contain questions.');
     const title=lines.slice(0,p1).find(x=>/test|assessment|exam/i.test(x))||fileName.replace(/\.[^.]+$/,'');
     const standard=questions.map(q=>({...q}));
-    return {title,passages:{basic:passage,standard:passage,advanced:passage},questions:{basic:standard,standard,advanced:standard},sourceFileName:fileName,sourceText:rawText,wordBank,bonusLimit};
+    return {title,passages:{basic:passage,standard:passage,advanced:passage},questions:{basic:standard,standard,advanced:standard},sourceFileName:fileName,sourceText:rawText,wordBank,bonusLimit:computedBonusLimit};
   };
 '''
 replace('  const parseTeacherTest = (rawText: string, fileName: string): ExamContent => {',helper+'\n  const parseTeacherTest = (rawText: string, fileName: string): ExamContent => {\n    const threePart=parseThreePartTest(rawText,fileName);\n    if(threePart)return threePart;')
@@ -85,6 +92,6 @@ replace('        const roundedScore = Math.round((Number(score) / safeTotal) * s
 replace('score: roundedScore, max: safeMax, rawScore: Number(score) || 0, rawMax: safeTotal, violations,','score: roundedScore, max: safeMax, bonusScore: awardedBonus, rawScore: Number(score) || 0, rawMax: safeTotal, violations,')
 replace('{q.hint && <p className="question-hint">','{q.skill === "Vocabulary" && examContent?.wordBank?.length ? <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 mb-3"><strong>Word Box: </strong>{examContent.wordBank.join("  ·  ")}</div> : null}{q.hint && <p className="question-hint">')
 replace('placeholder="Type your answer exactly"','placeholder={q.skill === "Vocabulary" ? "Choose a word from the box" : "Type your answer exactly"}')
-replace('setProcessingMessage(\`Processed \${content.questions.standard.length} questions. Basic shows one fewer incorrect choice per MCQ; Standard keeps the teacher’s original choices.\`);','setProcessingMessage(content.wordBank ? \`Three-part exam ready: \${content.questions.standard.length} questions (Reading, Grammar, Vocabulary). \${content.bonusLimit || 0} possible bonus marks; only explicit bonus questions earn them.\` : \`Processed \${content.questions.standard.length} questions. Basic shows one fewer incorrect choice per MCQ; Standard keeps the teacher’s original choices.\`);')
+replace('setProcessingMessage(\`Processed \${content.questions.standard.length} questions. Basic shows one fewer incorrect choice per MCQ; Standard keeps the teacher’s original choices.\`);','setProcessingMessage(content.wordBank ? \`Three-part exam ready: \${content.questions.standard.length} questions (Reading, Grammar, Vocabulary). \${content.bonusLimit || 0} possible bonus marks; extra questions after the regular maximum earn bonus marks when answered correctly.\` : \`Processed \${content.questions.standard.length} questions. Basic shows one fewer incorrect choice per MCQ; Standard keeps the teacher’s original choices.\`);')
 p.write_text(s)
 print('Three-part Reading / Grammar / Vocabulary + explicit bonus marking installed')
