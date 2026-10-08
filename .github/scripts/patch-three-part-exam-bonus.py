@@ -79,7 +79,10 @@ helper=r'''
 replace('  const parseTeacherTest = (rawText: string, fileName: string): ExamContent => {',helper+'\n  const parseTeacherTest = (rawText: string, fileName: string): ExamContent => {\n    const threePart=parseThreePartTest(rawText,fileName);\n    if(threePart)return threePart;')
 replace('      if (docxReading.passage) {','      if (docxReading.passage && !content.wordBank) {')
 replace('  const total = current.reduce((sum, question) => sum + question.marks, 0);','  const total = current.reduce((sum, question) => sum + question.marks, 0);\n  // Bonus allocation is resolved against the per-class Tracker maximum on submission.')
-replace('        const roundedScore = Math.round((Number(score) / safeTotal) * safeMax);','        const awardedBonus = Math.min(bonusEarned, Number(joinedSession.examContent?.bonusLimit || 0));\n        const roundedScore = Math.round(((Number(score)-bonusEarned) / safeTotal) * safeMax) + awardedBonus;')
+replace('        const roundedScore = Math.round((Number(score) / safeTotal) * safeMax);', '''        const trackerMax = Number(joinedSession.maxMark) || safeMax;
+        const bonusCount = joinedSession.examContent?.wordBank ? Math.max(0, current.length - trackerMax) : 0;
+        const awardedBonus = current.slice(current.length - bonusCount).reduce((sum, q) => sum + (answerFeedback[String(q.id)] ? 1 : 0), 0);
+        const roundedScore = bonusCount > 0 ? Number(score) : Math.round((Number(score) / safeTotal) * safeMax);''')
 replace('score: roundedScore, max: safeMax, rawScore: Number(score) || 0, rawMax: safeTotal, violations,','score: roundedScore, max: safeMax, bonusScore: awardedBonus, rawScore: Number(score) || 0, rawMax: safeTotal, violations,')
 replace('{q.hint && <p className="question-hint">','{q.skill === "Vocabulary" && examContent?.wordBank?.length ? <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 mb-3"><strong>Word Box: </strong>{examContent.wordBank.join("  ·  ")}</div> : null}{q.hint && <p className="question-hint">')
 replace('placeholder="Type your answer exactly"','placeholder={q.skill === "Vocabulary" ? "Choose a word from the box" : "Type your answer exactly"}')
