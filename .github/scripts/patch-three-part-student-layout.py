@@ -10,7 +10,7 @@ flag='  const showSectionReading = Boolean(examContent?.passages[level]?.trim())
 import re
 m=re.search(r'  const safeCurrentQuestion = Math.min\\([\\s\\S]*?\\n  \\);',s)
 if not m: raise RuntimeError("Cannot locate safe question index expression")
-s=s[:m.end()]+'\\n'+flag+s[m.end():]
+s=s[:m.end()]+'\n'+flag+s[m.end():]
 # Change only the student exam layout expressions, leaving existing reading-only exams alone.
 s=s.replace('student-exam-grid ${hasReadingPassage ?','student-exam-grid ${showSectionReading ?',1)
 s=s.replace('{hasReadingPassage && <section className="reading-panel">','{showSectionReading && <section className="reading-panel">',1)
