@@ -126,7 +126,9 @@ jobs:
         run: python .github/scripts/patch-password-only-anti-cheat-unlock.py
       - name: Support three-part Reading Grammar Vocabulary exams with bonus marks
         run: python .github/scripts/patch-three-part-exam-bonus.py
-      - name: Hide reading passage in Grammar and Vocabulary and use word dropdown\n        run: python .github/scripts/patch-three-part-student-layout.py\n      - name: Verify student privacy and password-only unlock before build
+      - name: Hide reading passage in Grammar and Vocabulary and use word dropdown
+        run: python .github/scripts/patch-three-part-student-layout.py
+      - name: Verify student privacy and password-only unlock before build
         run: python .github/scripts/verify-student-privacy-and-unlock.py
       # My Library is always rendered, including when a teacher has zero saved exams.
       - uses: actions/setup-node@v4
