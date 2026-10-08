@@ -7,10 +7,10 @@ anchor='  const safeCurrentQuestion = Math.min('
 if anchor not in s: raise RuntimeError("Current question index anchor changed")
 flag='  const showSectionReading = Boolean(examContent?.passages[level]?.trim()) && (!examContent?.wordBank || current[safeCurrentQuestion]?.skill === "Reading Comprehension");'
 # Insert after the complete safeCurrentQuestion expression, not before it.
-import re
-m=re.search(r'  const safeCurrentQuestion = Math.min\\([\\s\\S]*?\\n  \\);',s)
-if not m: raise RuntimeError("Cannot locate safe question index expression")
-s=s[:m.end()]+'\n'+flag+s[m.end():]
+start=s.index(anchor)
+end=s.find(';',start)
+if end<0 or end-start>350: raise RuntimeError("Cannot locate safe question index expression")
+s=s[:end+1]+'\\n'+flag+s[end+1:]
 # Change only the student exam layout expressions, leaving existing reading-only exams alone.
 s=s.replace('student-exam-grid ${hasReadingPassage ?','student-exam-grid ${showSectionReading ?',1)
 s=s.replace('{hasReadingPassage && <section className="reading-panel">','{showSectionReading && <section className="reading-panel">',1)
