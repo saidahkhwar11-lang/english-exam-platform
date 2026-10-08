@@ -108,6 +108,7 @@ jobs:
           python .github/scripts/patch-multi-text-template-download.py
       - name: Generate and link three-part exam Word template
         run: |
+          python -m pip install --quiet python-docx
           python .github/scripts/generate-three-part-template.py
           python .github/scripts/patch-three-part-template-download.py
       - name: Accept teacher reading and spelling exam formats
