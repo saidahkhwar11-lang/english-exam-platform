@@ -82,6 +82,7 @@ print("Final submit privacy and password-only anti-cheat unlock applied")
 # The active session object contains examContent between the student-name map
 # and updatedAt; earlier patterns therefore missed the actual session record.
 s=p.read_text(encoding="utf-8")
+s=s.replace("allowedStudentNames?: Record<string, string> };", "allowedStudentNames?: Record<string, string>; teacherEmail?: string };",1)
 session_anchor="allowedStudentNames, examContent, timeAllowed, updatedAt: Date.now()"
 if session_anchor in s:
     s=s.replace(session_anchor,
