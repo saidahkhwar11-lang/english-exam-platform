@@ -1,9 +1,16 @@
 from pathlib import Path
 p=Path("app/page.tsx")
 s=p.read_text(encoding="utf-8")
-anchor='  const hasReadingPassage = Boolean(examContent?.passages[level]?.trim());'
-if s.count(anchor)!=1: raise RuntimeError("Reading passage visibility anchor changed")
-s=s.replace(anchor,anchor+'\n  const showSectionReading = hasReadingPassage && (!examContent?.wordBank || current[safeCurrentQuestion]?.skill === "Reading Comprehension");',1)
+# The original reading-panel flag is not present in every migrated build.
+# Derive the section-aware flag immediately after the stable current-question index.
+anchor='  const safeCurrentQuestion = Math.min('
+if anchor not in s: raise RuntimeError("Current question index anchor changed")
+flag='  const showSectionReading = Boolean(examContent?.passages[level]?.trim()) && (!examContent?.wordBank || current[safeCurrentQuestion]?.skill === "Reading Comprehension");'
+# Insert after the complete safeCurrentQuestion expression, not before it.
+import re
+m=re.search(r'  const safeCurrentQuestion = Math.min\\([\\s\\S]*?\\n  \\);',s)
+if not m: raise RuntimeError("Cannot locate safe question index expression")
+s=s[:m.end()]+'\\n'+flag+s[m.end():]
 # Change only the student exam layout expressions, leaving existing reading-only exams alone.
 s=s.replace('student-exam-grid ${hasReadingPassage ?','student-exam-grid ${showSectionReading ?',1)
 s=s.replace('{hasReadingPassage && <section className="reading-panel">','{showSectionReading && <section className="reading-panel">',1)
