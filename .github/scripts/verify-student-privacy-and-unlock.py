@@ -9,9 +9,9 @@ for field in unlock_inputs:
     s=s.replace(field,'')
 # Ensure teacher identity is resolved from the active class session, not
 # supplied by the student. Old sessions lacking teacherEmail must be reset.
-if 'setApprovalEmail(session.teacherEmail || "")' not in s:
+if 'teacherEmail: email.trim().toLowerCase(), examContent' not in s:
     raise RuntimeError('Cannot guarantee teacher identity is read from the active session.')
-if 'await verifyTeacherCredentials(approvalEmail, approvalPassword);' not in s:
+if 'await verifyTeacherCredentials(joinedSession.teacherEmail, unlockPassword);' not in s:
     raise RuntimeError('Password-only verification call missing.')
 if 'className="student-submit-success"' not in s or 'if (access === "student" && submitted)' not in s:
     raise RuntimeError('Student submission privacy screen missing.')
