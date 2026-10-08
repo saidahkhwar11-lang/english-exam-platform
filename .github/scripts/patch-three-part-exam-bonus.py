@@ -50,7 +50,7 @@ helper=r'''
           const options:Array<{letter:string;text:string}>=[];
           const firstOption=text.search(/(?:^|\n|\s)A[.)]\s*/i);
           const prompt=(firstOption>=0?text.slice(0,firstOption):block[0]).replace(/\s+/g,' ').trim();
-          for(const m of text.matchAll(/(?:^|\n|\s)([A-D])[.)]\s*(.*?)(?=(?:\n|\s)[A-D][.)]\s*|$)/gis)){
+          for(const m of text.matchAll(new RegExp('(?:^|\\n|\\s)([A-D])[.)]\\s*(.*?)(?=(?:\\n|\\s)[A-D][.)]\\s*|$)','gi'))){
             const val=m[2].replace(/\s+/g,' ').trim();if(val)options.push({letter:m[1].toUpperCase(),text:val});
           }
           // Word documents sometimes use automatic list numbering, omitted from extracted text.
