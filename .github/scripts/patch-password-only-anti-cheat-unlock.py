@@ -78,3 +78,23 @@ if ".student-submit-success{" not in c:
     css.write_text(c + style, encoding="utf-8")
 
 print("Final submit privacy and password-only anti-cheat unlock applied")
+
+# The active session object contains examContent between the student-name map
+# and updatedAt; earlier patterns therefore missed the actual session record.
+s=p.read_text(encoding="utf-8")
+session_anchor="allowedStudentNames, examContent, timeAllowed, updatedAt: Date.now()"
+if session_anchor in s:
+    s=s.replace(session_anchor,
+      'allowedStudentNames, teacherEmail: email.trim().toLowerCase(), examContent, timeAllowed, updatedAt: Date.now()',1)
+if 'teacherEmail: email.trim().toLowerCase(), examContent' not in s:
+    raise RuntimeError("Teacher email not bound to newly created exam session")
+# Unlock ONLY the current exam teacher's password, never a student-entered email.
+old='await verifyTeacherCredentials(unlockEmail, unlockPassword);'
+if old not in s: raise RuntimeError("Unlock credential call not found")
+s=s.replace(old,
+  'if (!joinedSession?.teacherEmail) throw new Error("Ask your teacher to reset the exam code before unlocking.");\n      await verifyTeacherCredentials(joinedSession.teacherEmail, unlockPassword);',1)
+old_field='<label className="field"><span>Teacher email</span><input type="email" value={unlockEmail} onChange={(e) => setUnlockEmail(e.target.value)} placeholder="Teacher email" /></label>'
+if old_field not in s: raise RuntimeError("Locked screen teacher-email field not found")
+s=s.replace(old_field,"",1)
+p.write_text(s,encoding="utf-8")
+print("Locked student screen now requests teacher password only; teacher identity bound to active exam session")
