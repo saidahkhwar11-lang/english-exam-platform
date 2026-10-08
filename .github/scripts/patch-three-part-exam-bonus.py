@@ -63,6 +63,13 @@ helper=r'''
         }
       }
     }
+    // In the uploaded CA1 Reading Assessment 2, Q21 and Q22 are the two bonus items.
+    // Mark them as bonus only for this identified 22-question / 2-bonus format;
+    // do not alter older exams or automatically award unattempted bonus marks.
+    if(bonusLimit===2 && questions.length===22 && bonusStart<0 &&
+       questions.some(q=>q.id===21) && questions.some(q=>q.id===22)){
+      questions.forEach(q=>{if(q.id===21||q.id===22)q.bonus=true;});
+    }
     if(questions.filter(q=>q.bonus).length>bonusLimit)throw new Error('Bonus questions exceed the stated bonus limit.');
     if(!questions.length||questions.some((q,i)=>i>0&&q.id<=questions[i-1].id))throw new Error('Questions must be numbered in order.');
     if(!['Reading Comprehension','Grammar','Vocabulary'].every(skill=>questions.some(q=>q.skill===skill)))throw new Error('All three parts must contain questions.');
